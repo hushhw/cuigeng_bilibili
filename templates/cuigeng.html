@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">催更啦！！！</a>
+        </div>
+    </div>
+</nav>
+<div class="container-fluid">
+    <div class="col-md-3">
+        <div class="row placeholders">
+            <div class="col-sm-4 placeholders">
+                <div class="overviewbg">
+                    <p>上次更新</p>
+                    <p><strong class="ovstrong">{{ overviewlist[0] }}</strong>天</p>
+                </div>
+            </div>
+            <div class="col-sm-4 placeholders">
+                <div class="overviewbg">
+                    <p>本月投稿</p>
+                    <p><strong class="ovstrong">{{ overviewlist[1] }}</strong>期</p>
+                    <p></p>
+                </div>
+            </div>
+            <div class="col-sm-4 placeholders">
+                <div class="overviewbg">
+                    <p>总投稿</p>
+                    <p><strong class="ovstrong">{{ overviewlist[2] }}</strong>期</p>
+                </div>
+            </div>
+        </div>
+        <h3 class="sub-header">总排行榜</h3>
+        <div class="allrank">
+            {% for rank in ranklist %}
+            <div class="rank">
+                <div class="col-sm-1">
+                    <p> {{ rank[0] }}</p>
+                </div>
+                <div class="col-sm-8">
+                    <a href="{{ rank[1] }}"  target="_Blank"><p class="ranktitle">{{ rank[2] }}</p></a>
+                </div>
+                <div class="col-sm-2">
+                    <p> {{ rank[3] }}</p>
+                </div>
+                <div class="progress col-sm-12">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="{{ rank[4] }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ rank[4] }}%;">
+                        <span class="sr-only">{{ rank[4]}}%</span>
+                    </div>
+                </div>
+                <div></div>
+            </div>
+            {% endfor %}
+        </div>
+        <div id="wordcloud" style="height: 200px;"></div>
+        <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.js"></script>
+        <script type="text/javascript">
+            var option1 = {
+                color: '#15a4fa',
+                noDataLoadingOption: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.0)',
+                    text: '弹幕云图正在分词统计，加载中',
+                    textStyle: {
+                        color: '#FFB6C1',
+                        fontSize: 14
+                    }
+                }
+            };
+            var wc1 = new Js2WordCloud(document.getElementById('wordcloud'));
+            wc1.showLoading();
+            setTimeout(function() {
+                wc1.hideLoading();
+                wc1.setOption(option1)
+            }, 1000);
+
+            $.ajax({
+                    type: 'POST',
+                    url: '/wordcloudtask',
+                    dataType: "json",
+                    data: JSON.stringify({'up': window.location.pathname}),
+                    success: function (data, status, request) {
+                        var wordlist = [];
+                        JSON.parse(data, function (k, v) {
+                            var word = [k,v];
+                            wordlist.push(word);
+                        });
+                        wordlist.pop();
+                        var option8 = {
+                            fontSizeFactor: 0.1,  // 当词云值相差太大，可设置此值进字体行大小微调，默认0.1
+                            maxFontSize: 50,
+                            minFontSize: 8,
+                            backgroundColor: 'rgba(0, 0, 0, 0.0)',
+                            color: 'rgb(251, 138, 174)',
+                            tooltip: {
+                                show: true,
+                                formatter: function(item) {
+                                    return item[0] + ': ' + item[1]
+                                }
+                            },
+                            list: wordlist
+                        };
+                        setTimeout(function() {
+                            wc1.setOption(option8)
+                        }, 1000);
+                    },
+                    error: function() {
+                        alert('Unexpected error');
+                    }
+            });
+
+            window.onresize = function() {
+                wc1.resize()
+            };
+        </script>
+    </div>
+    <div class="col-md-9">
+        <h3 class="sub-header">已投稿视频列表</h3>
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover">
+                <thead class="aotu-thead">
+                    <tr>
+                        <th></th>
+                        <th>标题</th>
+                        <th>点击量</th>
+                        <th>发布时间</th>
+                        <th>视频时长</th>
+                        <th>评论</th>
+                        <th>弹幕</th>
+                        <th>点赞</th>
+                        <th>投币</th>
+                        <th>收藏</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for constribute in constributelist %}
+                    <tr class="aotu-tr">
+                        {% for col in constribute %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <h3 class="sub-header">粉丝变化</h3>
+        <canvas id="myChart" height="180" width="850"></canvas>
+        <script>
+            var ctx = document.getElementById('myChart').getContext('2d');
+            var gradientStroke = ctx.createLinearGradient(0, 0, 0, 100);
+            // 定义渐变的 偏移 和 颜色
+            gradientStroke.addColorStop(0, 'rgba(255,50,132, 0.8)');
+            gradientStroke.addColorStop(1, 'rgba(255,50,132, 0.2)');
+            $.ajax({
+                type: 'POST',
+                url: '/fansnumtask',
+                data: JSON.stringify({'up': window.location.pathname}),
+                success: function (data, status, request) {
+                    console.log(data);
+                    var daylist = [];
+                    var numlist = [];
+                    JSON.parse(data, function (k, v) {
+                        var days = k;
+                        var nums = v;
+                        daylist.push(days);
+                        numlist.push(nums);
+                    });
+                    daylist.pop();
+                    numlist.pop();
+                    console.log(daylist);
+                    console.log(numlist);
+
+                    var chart = new Chart(ctx, {
+                        // The type of chart we want to create
+                        type: 'line',
+                        // The data for our dataset
+                        data: {
+                            labels: daylist,
+                            datasets: [{
+                                label: '粉丝净增长',
+                                backgroundColor: gradientStroke,
+                                borderColor: 'rgb(255, 255, 255)',
+                                pointBackgroundColor: 'rgb(255,255,255)',
+                                pointBorderColor: 'rgb(255,50,132)',
+                                data: numlist
+                            }]
+                        },
+                        // Configuration options go here
+                        options: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                            },
+                            scales: {
+                                xAxes: [{
+                                    gridLines: {
+                                        borderDash: [1, 2],
+                                        color: "rgba(255, 255, 255, 0.2)",
+                                    }
+                                }],
+                                yAxes: [{
+                                    gridLines: {
+                                        borderDash: [1, 2],
+                                        color: "rgba(255, 255, 255, 0.2)",
+                                    }
+                                }]
+                            },
+                            hover: {
+                                animationDuration: 0  // 防止鼠标移上去，数字闪烁
+                            },
+                            animation: {           // 这部分是数值显示的功能实现
+                                onComplete: function () {
+                                    var chartInstance = this.chart,
+
+                                    ctx = chartInstance.ctx;
+                                    // 以下属于canvas的属性（font、fillStyle、textAlign...）
+                                    ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontSize, Chart.defaults.global.defaultFontStyle, Chart.defaults.global.defaultFontFamily);
+                                    ctx.fillStyle = "white";
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'bottom';
+
+                                    this.data.datasets.forEach(function (dataset, i) {
+                                        var meta = chartInstance.controller.getDatasetMeta(i);
+                                        meta.data.forEach(function (bar, index) {
+                                            var data = dataset.data[index];
+                                            ctx.fillText(data, bar._model.x, bar._model.y - 5);
+                                        });
+                                    });
+                                }
+                            }
+
+                        }
+                    });
+                },
+                error: function(res) {
+                    console.log(res);
+                    console.log(1)
+                }
+            });
+
+        </script>
+    </div>
+</div>
+
+
+{% endblock %}
