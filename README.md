@@ -6,7 +6,7 @@
 
 参考：https://cuigeng.hushhw.cn/aotu
 
-![](https://photo.hushhw.cn/img2021/cuigeng_aotu.png)
+![aotu](https://photo.hushhw.cn/img2021/cuigeng_aotu.png)
 
 
 
@@ -46,7 +46,7 @@ celery beat -A index -l INFO
   mid = {'aotu':'36909511', 'yenong':'327552140'}
   ```
 
-  up 的 mid 为主页的 url 后缀，如：https://space.bilibili.com/36909511/，后续异步获取数据都需要通过该 dict 获取 mid 来获取数据。
+  up 的 mid 为主页的 url 后缀，如：https://space.bilibili.com/36909511/ ，后续异步获取数据都需要通过该 dict 获取 mid 来获取数据。
 
 * 随后需要在 `index.py` 中添加新 up 的页面配置，参考默认的 `aotu` 和 `yenong`，仅需修改 url 标识以及 mid 值，参考：
 
