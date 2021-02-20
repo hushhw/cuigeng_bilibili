@@ -101,64 +101,6 @@ def get_fans_info(mid):
 def add(x, y):
     return x+y
 
-def test():
-    output_dir = 'static/data'
-    for path, dir_list, file_list in os.walk(output_dir):
-        for middir in dir_list:
-            mid = str(middir)
-            base_info = get_base_info(mid)
-            page_number = math.ceil(base_info['archive_count'] / 100)
-            vlist = []
-            for pnum in range(page_number):
-                get_vlist_info(mid, pnum + 1, vlist)
-            print("爬取最新弹幕")
-            # 由于api请求过多会限制请求，所以考虑只对最新发布的视频追加弹幕数据，按照月份来存储，只更新近两个月的投稿
-            # 新的弹幕按照月份进行更新，进更新近两个月的
-            beforetwomonth = int(
-                time.mktime(datetime.date(datetime.date.today().year, datetime.date.today().month - 1, 1).timetuple()))
-            beginmonth = int(
-                time.mktime(datetime.date(datetime.date.today().year, datetime.date.today().month, 1).timetuple()))
-            print(beforetwomonth, beginmonth)
-            if os.path.exists(path + '/' + middir + '/' + str(beforetwomonth) + '.txt') is True:
-                os.remove(path + '/' + middir + '/' + str(beforetwomonth) + '.txt')
-            if os.path.exists(path + '/' + middir + '/' + str(beginmonth) + '.txt') is True:
-                os.remove(path + '/' + middir + '/' + str(beginmonth) + '.txt')
-            num = 0
-            for v in vlist:
-                if int(v['created']) > beforetwomonth and int(v['created']) < beginmonth:
-                    num += 1
-                    print(v['bvid'], num)
-                    danmu = get_onedanmu_info(v['bvid'])
-                    with open(path + '/' + middir + '/danmu' + str(beforetwomonth) + '.txt', 'a+',
-                              encoding='utf-8') as f:
-                        f.write(v['bvid'] + '\n')
-                        for con in danmu:
-                            data = re.sub(r'\[.*\]', '', con)  # 去掉表情
-                            data = re.sub(r'哈哈哈+', '', data)  # up猫叫哈哈，不得不把哈哈哈哈。。。判掉
-                            f.write(data + '\n')
-                elif int(v['created']) > beginmonth:
-                    num += 1
-                    print(v['bvid'], num)
-                    danmu = get_onedanmu_info(v['bvid'])
-                    print(danmu[0])
-                    with open(path + '/' + middir + '/danmu' + str(beginmonth) + '.txt', 'a+', encoding='utf-8') as f:
-                        f.write(v['bvid'] + '\n')
-                        for con in danmu:
-                            data = re.sub(r'\[.*\]', '', con)  # 去掉表情
-                            data = re.sub(r'哈哈哈+', '', data)  # up猫叫哈哈，不得不把哈哈哈哈。。。判掉
-                            f.write(data + '\n')
-            danmufile = []
-            filepath = path + '/' + middir
-            f_list = os.listdir(filepath)
-            for i in f_list:
-                if os.path.os.path.splitext(i)[0].startswith('danmu'):
-                    danmufile.append(i)
-            resultfile = open(filepath + '/result.txt', 'w', encoding='utf-8')
-            for file in danmufile:
-                for line in open(filepath + '/' + file, encoding='utf-8'):
-                    resultfile.writelines(line)
-                resultfile.write('\n')
-
 @celery.task
 def get_fansnum_info():
     output_dir = 'static/data'
@@ -187,10 +129,6 @@ def get_fansnum_info():
                     jsobj = json.dumps(model)
                     fw.write(jsobj)
                     fw.close()
-
-
-
-
 
 @celery.task
 def get_newdanmu_info():
@@ -358,6 +296,7 @@ def index():
 @aotudata.route('/aotu')
 def aotu():
     base_info = get_base_info(mid['aotu'])
+    upname = base_info['card']['name']
     page_number = math.ceil(base_info['archive_count'] / 100)
     vlist = []
     for pnum in range(page_number):
@@ -370,12 +309,13 @@ def aotu():
     if not os.path.exists('static/data/' + mid['aotu']):
         os.makedirs('static/data/' + mid['aotu'])
     get_olddanmu_info(mid['aotu'], vlist)
-    return render_template('cuigeng.html', overviewlist = overview_list, ranklist = rank_list,
+    return render_template('cuigeng.html', upname = upname, overviewlist = overview_list, ranklist = rank_list,
                            constributelist = constribute_list)
 
 @aotudata.route('/yenong')
 def yenong():
     base_info = get_base_info(mid['yenong'])
+    upname = base_info['card']['name']
     page_number = math.ceil(base_info['archive_count'] / 100)
     vlist = []
     for pnum in range(page_number):
@@ -388,7 +328,7 @@ def yenong():
     if not os.path.exists('static/data/' + mid['yenong']):
         os.makedirs('static/data/' + mid['yenong'])
     get_olddanmu_info(mid['yenong'], vlist)
-    return render_template('cuigeng.html', overviewlist = overview_list, ranklist = rank_list,
+    return render_template('cuigeng.html', upname = upname, overviewlist = overview_list, ranklist = rank_list,
                            constributelist = constribute_list)
 
 

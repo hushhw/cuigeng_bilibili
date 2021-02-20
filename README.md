@@ -6,7 +6,7 @@
 
 参考：https://cuigeng.hushhw.cn/aotu
 
-![aotu](https://photo.hushhw.cn/img2021/cuigeng_aotu.png)
+![aotu](https://github.com/hushhw/cuigeng_bilibili/tree/main/static/img/cuigeng_aotu.png)
 
 
 
