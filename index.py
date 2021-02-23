@@ -49,24 +49,13 @@ celery.conf.update(
 
 @celery.task
 def get_wordcloud_info(mid):
-    stop_words = []
-    for line in open('static/data/stop_words.txt', 'r', encoding='gbk'):
-        if line.strip() not in stop_words:
-            stop_words.append(line.strip())
-    # 加载自定义词典
-    jieba.load_userdict(r'static/data/user_dict.txt')
-    filepath = 'static/data/'+mid
-    with open(filepath + '/result.txt', encoding='utf-8') as f:
-        mytext = f.read()
-    mytext = re.sub(r"[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）]+", "", mytext)
-    wl_space_split = " ".join([str(item) for item in jieba.cut(mytext, cut_all=False) if item not in stop_words])
-    words = wl_space_split.split(' ')
-    counter = Counter(words)
-    wordcloud = {}
-    for fre in counter.most_common(50):
-        key = str(str(fre).split("'")[1])
-        value = int(str(fre).split(' ')[1].split(')')[0])
-        wordcloud[key] = value
+    output_dir = 'static/data/' + mid
+    listdir = os.listdir(output_dir)
+    wordcloud = dict()
+    if 'result.json' in listdir:
+        fr = open(pjoin(output_dir, 'result.json'), encoding='utf-8')
+        wordcloud = json.load(fr)
+        fr.close()
     wordcloudjson = json.dumps(wordcloud, ensure_ascii=False)
     return wordcloudjson
 
@@ -174,6 +163,12 @@ def get_newdanmu_info():
                             data = re.sub(r'\[.*\]', '', con)  # 去掉表情
                             data = re.sub(r'哈哈哈+', '', data)  # up猫叫哈哈，不得不把哈哈哈哈。。。判掉
                             f.write(data + '\n')
+            stop_words = []
+            for line in open('static/data/stop_words.txt', 'r', encoding='gbk'):
+                if line.strip() not in stop_words:
+                    stop_words.append(line.strip())
+            # 加载自定义词典
+            jieba.load_userdict(r'static/data/user_dict.txt')
             danmufile = []
             filepath = path + '/' + middir
             f_list = os.listdir(filepath)
@@ -185,6 +180,23 @@ def get_newdanmu_info():
                 for line in open(filepath + '/' + file, encoding='utf-8'):
                     resultfile.writelines(line)
                 resultfile.write('\n')
+            with open(filepath + '/result.txt', encoding='utf-8') as f:
+                mytext = f.read()
+            mytext = re.sub(r"[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）]+", "", mytext)
+            wl_space_split = " ".join(
+                [str(item) for item in jieba.cut(mytext, cut_all=False) if item not in stop_words])
+            words = wl_space_split.split(' ')
+            counter = Counter(words)
+            wordcloud = {}
+            for fre in counter.most_common(100):
+                key = str(str(fre).split("'")[1])
+                value = int(str(fre).split(' ')[1].split(')')[0])
+                wordcloud[key] = value
+            wordcloudjson = json.dumps(wordcloud, ensure_ascii=False)
+            fileObject = open(filepath + '/result.json', 'w', encoding='utf-8')
+            fileObject.write(wordcloudjson)
+            fileObject.close()
+
 
 def get_base_info(mid):
     base_info_url = f'https://api.bilibili.com/x/web-interface/card?mid={mid}'

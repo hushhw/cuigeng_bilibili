@@ -87,7 +87,7 @@
                         wordlist.pop();
                         var option8 = {
                             fontSizeFactor: 0.1,  // 当词云值相差太大，可设置此值进字体行大小微调，默认0.1
-                            maxFontSize: 50,
+                            maxFontSize: 60,
                             minFontSize: 8,
                             backgroundColor: 'rgba(0, 0, 0, 0.0)',
                             color: 'rgb(251, 138, 174)',
@@ -155,7 +155,6 @@
                 url: '/fansnumtask',
                 data: JSON.stringify({'up': window.location.pathname}),
                 success: function (data, status, request) {
-                    console.log(data);
                     var daylist = [];
                     var numlist = [];
                     JSON.parse(data, function (k, v) {
@@ -166,8 +165,6 @@
                     });
                     daylist.pop();
                     numlist.pop();
-                    console.log(daylist);
-                    console.log(numlist);
 
                     var chart = new Chart(ctx, {
                         // The type of chart we want to create
